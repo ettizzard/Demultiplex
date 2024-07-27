@@ -17,6 +17,7 @@
     
 ## Part 2
 1. Define the problem
+    Our original biological read fastq files contain all of our reads undistinguished by index. We need to organize all of these reads into pairs of new fastq files based on their index matching status. One pair of new fastq files needs to include all reads with matching index pairs. A second pair of fastq files needs to include index-hopped reads. The final pair of fastq files needs to include reads with unknown/low quality indices.
 2. Describe output
 3. Upload your [4 input FASTQ files](../TEST-input_FASTQ) and your [>=6 expected output FASTQ files](../TEST-output_FASTQ).
 4. Pseudocode

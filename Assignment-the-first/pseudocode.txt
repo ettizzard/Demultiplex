@@ -1,0 +1,17 @@
+#shebang
+
+#initialize bioinfo.py, argparse
+
+#set up arparse to accept fw and rv biological read fastq files and then fw and rv index fastq files and then index map txt file
+
+#Initialize and fill a dictionary with index sequences as keys and 2-character index as values
+
+#Reading R1, R2, R3, and R4 files simultaneously. Select sequence score line of index. If index contains an N, throw the corresponding read in each file into the low quality/unknown fastq files, increment counter, and add r2 seq to r1 header and r3 seq to r4 header.
+
+#If index is not ambiguous, check for average quality score of entire index sequence. If average is <30, throw index and corresponing reads into low quality/unknown fastq files, increment counter, and add r2 seq to r1 header and r3 seq to r4 header.
+
+#Next, check to make sure indices match (read 3 should be the reverse complement of read 2). If the indices do not match, throw read into index-hopping fastq files, increment counter, and add r2 seq to r1 header and r3 seq to r4 header.
+
+#Now, we should have only our dual-matched reads and indices. So, iterate through the files, adding the index sequences to headers, and then adding the appended records to new fastq files based on barcode.
+
+#Print values storing counts of matched index reads, index-hopped reads, and unknown/low quality reads.
