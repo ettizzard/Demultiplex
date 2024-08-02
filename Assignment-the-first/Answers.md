@@ -28,6 +28,53 @@
     Assuming we use every index provided, we will have 24 pairs of fastq files containing reads with kniwn dual matched indices. File1 in the pair will be biological read1, and file 2 will be biological read2. Another pair of fastq files will contain all of the reads that exhibited index hopping of known indices, again file1 being biological read1 and file2 being biological read2. The final pair of fastq files will contain all reads with unknown or low quality corresponding indices, file1 for biological read1 and file2 for biological read2. All said and done, we should have 52 separate fastq files. Additionally, we will output the number of read pairs with properly match indices per index pair, the number of index-hopped read pairs, and the number of read pairs with low quality/unknown indices.  
 3. Upload your [4 input FASTQ files](../TEST-input_FASTQ) and your [>=6 expected output FASTQ files](../TEST-output_FASTQ).
 4. Pseudocode
+`#Initialization
+    #Shebang
+
+    #Import necessary modules
+
+    #Create a variable to hold count of number of pairs of properly matched indices, another to hold count of index-hopped pairs, and a third variable to hold count of pairs with low quality/unknown indices. All 3 of these variables will be initially set to 0.
+
+    #Create a set to contain our 24 index sequences.
+        #To accomplish this, open the index file from Talapas and iterate over to add each index to set.
+    
+    #Create a dictionary to contain tuples of index pairs as keys and tuples of file names as values.
+        #Format for dual-matched pairs: keys = ("index1", "index2"); values =  ("R1_dualmatched_{index1}-{index2}.fq", "R2_dualmatched_{index1}-{index2}.fq")
+        #Format for index-hopped pairs: keys = ("index1", "index2"); values =  ("R1_indexhopped.fq", "R2_indexhopped.fq")
+        #Format for pairs with unknown/low-quality indices: keys = ("index1", "index2"); values =  ("R1_lowqual_unknown.fq", "R2_lowqual_unknown.fq")
+
+    #Create another dictionary to keep count of occurrences of index pairs. Dictionary keys will be a tuple of the index sequences, and values will be the number of occurrences of the index pair.
+        #Before our main body of code, we can initialize the 24 dual-matched index pairs as keys in this dictionary with values set to 0. As we continue in the algorithm, we will add unmatched high-quality index pairs to this dictionary as they are encountered.
+
+#Main Body
+    #Start by opening our 4 original fastq files at once.
+    
+    #Iterate over all 4 fastq files 1 record at a time (4 lines).
+    
+    #Per record, take each record line per file and save as corresponding variable.
+    
+    #Take the read3 index sequence, and create its reverse compliment, updating the variable with this string.
+    
+    #Append the read1 and read4 header lines with the index1 and index2 (read 2 and read3 reverse compliment).
+
+    #Now that we have our record in the proper format, we can sort the reads.
+        #First check to see if indices are within known list. If not, sort reads to unknown/low quality fastq files and increment unknown/low quality counter
+        #Convert quality score lines of read1 and read4. Calculate average qs of entire read for both. If Average is below cutoff, also sort to unknown/low quality fastq files and increment unknown/low quality counter.
+        
+        #Elif:
+            #Check that indices match. If they don't, add read1 and read4 records with appended headers to index-hopped fastq file pair and incrememnt index-hopped counter.
+                #Check if this index pair already exists within the index pair freq dictionary. If it does, increment the corresponding value. Otherwise, add the pair and set its value to 1.
+
+        #Elif:
+            #This statement should encompass our high quality dual-matched index reads.
+            #Increment matched index counter and the corresponding value in the index pair freq dictionary.
+            #Add record to corresponding index in the first index pair-filename dictionary.
+
+#Outputs
+    #Print index pair-filename dictionary entries into corresponding files.
+    #Print counts.
+    #Close all files left open.
+`
 5. High level functions. For each function, be sure to include:
     1. Description/doc string
     2. Function headers (name and parameters)
