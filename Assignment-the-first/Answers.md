@@ -28,7 +28,8 @@
     Assuming we use every index provided, we will have 24 pairs of fastq files containing reads with kniwn dual matched indices. File1 in the pair will be biological read1, and file 2 will be biological read2. Another pair of fastq files will contain all of the reads that exhibited index hopping of known indices, again file1 being biological read1 and file2 being biological read2. The final pair of fastq files will contain all reads with unknown or low quality corresponding indices, file1 for biological read1 and file2 for biological read2. All said and done, we should have 52 separate fastq files. Additionally, we will output the number of read pairs with properly match indices per index pair, the number of index-hopped read pairs, and the number of read pairs with low quality/unknown indices.  
 3. Upload your [4 input FASTQ files](../TEST-input_FASTQ) and your [>=6 expected output FASTQ files](../TEST-output_FASTQ).
 4. Pseudocode
-`#Initialization
+```
+#Initialization
     #Shebang
 
     #Import necessary modules
@@ -74,7 +75,7 @@
     #Print index pair-filename dictionary entries into corresponding files.
     #Print counts.
     #Close all files left open.
-`
+```
 5. High level functions. For each function, be sure to include:
     1. Description/doc string
     2. Function headers (name and parameters)
