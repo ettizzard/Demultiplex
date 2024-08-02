@@ -42,4 +42,5 @@
 
 #Outputs
     #Print index pair-filename dictionary entries into corresponding files.
+    #Print counts.
     #Close all files left open.
