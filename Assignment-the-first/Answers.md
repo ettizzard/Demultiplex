@@ -11,8 +11,7 @@
 | 1294_S1_L008_R4_001.fastq.gz | read2 | 101 | +33 |
 
 2. Per-base NT distribution
-    1.  
-    ![Read1 Plot](https://github.com/ettizzard/Demultiplex/blob/9dffbc06dbe2ab774616887783d08fb19cc1e156/Assignment-the-first/1294_S1_L008_R1_001_distributionplot.png)  
+    1.  ![Read1 Plot](https://github.com/ettizzard/Demultiplex/blob/9dffbc06dbe2ab774616887783d08fb19cc1e156/Assignment-the-first/1294_S1_L008_R1_001_distributionplot.png)  
     ![Read2 Plot](https://github.com/ettizzard/Demultiplex/blob/868d00b9ff43eeaec423377a50fecd46163aeab0/Assignment-the-first/1294_S1_L008_R2_001_distributionplot.png)  
     ![Read3 Plot](https://github.com/ettizzard/Demultiplex/blob/868d00b9ff43eeaec423377a50fecd46163aeab0/Assignment-the-first/1294_S1_L008_R3_001_distributionplot.png)  
     ![Read4 Plot](https://github.com/ettizzard/Demultiplex/blob/868d00b9ff43eeaec423377a50fecd46163aeab0/Assignment-the-first/1294_S1_L008_R4_001_distributionplot.png)  
