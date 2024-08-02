@@ -11,7 +11,7 @@
 | 1294_S1_L008_R4_001.fastq.gz | read2 | 101 | +33 |
 
 2. Per-base NT distribution
-    1. https://github.com/ettizzard/Demultiplex/blob/9dffbc06dbe2ab774616887783d08fb19cc1e156/Assignment-the-first/1294_S1_L008_R1_001_distributionplot.png
+    1. !(https://github.com/ettizzard/Demultiplex/blob/9dffbc06dbe2ab774616887783d08fb19cc1e156/Assignment-the-first/1294_S1_L008_R1_001_distributionplot.png)
       
     2. For index reads, we need to be more strict on quality. If even a single base in an index sequence is incorrect, the entire read will be improperly labelled. Improper read labeling is mucn more detrimental to overall downstream analysis than a single or few bases in a biological read being incorrect. So, I would want an index quality score cutoff of at least 30, as this is 99.9% accurate and is generally sufficient for homology. However, these quality scores seem to be binned (i.e., most assigned quality scores are given A, F, or J, meaning any scores in between these are encompassed within them by binning as a means of data compression). My cutoff of 30 is encompassed by "A", so a score of 32. This is more strict than my original cutoff, but I think 32 is perfectly appropriate as well. So, any index sequence with a single base with a quality score below 32 will be sorted to the low quality/unknown index fastq file pair. For our purposes, we actually don't really need a strict cutoff for biological reads, because our downstream analysis invloves genome assembly. If a biological read is of too low quality or contains too many "N"s, it simply will not align. If I had to provide a cutoff for biological reads, however, I would just want the average quality score of the entire read to be at least 30.  
       
