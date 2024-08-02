@@ -103,8 +103,13 @@ set -e
     
 
 
-3?) Make unit tests:
+6) Made unit tests:
     R1_Unit_Test.fq
+    #First record is high quality dual matched
+    #Second record is low quality (contains N)
+    #Third record contains unknown index
+    #Fourth record exhibits index hopping
+
 
     R2_Unit_Test.fq
     #First fastq record will be a high-quality index read
