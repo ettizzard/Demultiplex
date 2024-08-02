@@ -81,3 +81,21 @@
     2. Function headers (name and parameters)
     3. Test examples for individual functions
     4. Return statement
+```
+def reverse_compliment(seq: str) -> str:
+    '''Takes a nucleotide sequence and returns its reverse compliment. If sequence contains N, reverse comlimentary base will also be N.'''
+    return seq_rc
+Input: ATCGTAT
+Expected output: ATACGAT
+
+def print_outputs(dual_matched_count: int, index_hopped_count: int, low_qual_unknown_count: int, paired_index_dict: dict, outputfilename: str) -> str:
+    '''Takes counts of index pair types as well as the dictionary containing index pairs and filename conventions, then returns corresponding str to be written to file.'''
+    return fileoutput
+Input: above variables and dictionary
+Expected output: properly formatted tab-separated summary of results to be written to file
+
+def print_sorted_pairs(read1_header: str, read1_seq: str, read1_qscoreline: str, read1_filename: str, read4_header: str, read4_seq: str, read4_qscoreline: str, read4_filename: str) -> str:
+    '''Rewrites each line of read1 and read4 records to sorted fastq file pairs based on index.
+Input: above variables
+Expected output: string of lines formatted in the fastq file convention
+```
