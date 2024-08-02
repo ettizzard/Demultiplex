@@ -104,18 +104,77 @@ set -e
 
 
 6) Made unit tests:
-    R1_Unit_Test.fq
     #First record is high quality dual matched
     #Second record is low quality (contains N)
     #Third record contains unknown index
     #Fourth record exhibits index hopping
 
+7) Fixed up pseudocode:
+###START OF PSEUDOCODE###
+#Initialization
+    #Shebang
 
-    R2_Unit_Test.fq
-    #First fastq record will be a high-quality index read
-    $ zcat 1294_S1_L008_R2_001.fastq.gz | head -150000
+    #Import necessary modules
 
-    R3_Unit_Test.fq
-    #First fastq record will be a high-quality index read
-    $ zcat 1294_S1_L008_R3_001.fastq.gz | head -150000
+    #Create a variable to hold count of number of pairs of properly matched indices, another to hold count of index-hopped pairs, and a third variable to hold count of pairs with low quality/unknown indices. All 3 of these variables will be initially set to 0.
+
+    #Create a set to contain our 24 index sequences.
+        #To accomplish this, open the index file from Talapas and iterate over to add each index to set.
     
+    #Create a dictionary to contain tuples of index pairs as keys and tuples of file names as values.
+        #Format for dual-matched pairs: keys = ("index1", "index2"); values =  ("R1_dualmatched_{index1}-{index2}.fq", "R2_dualmatched_{index1}-{index2}.fq")
+        #Format for index-hopped pairs: keys = ("index1", "index2"); values =  ("R1_indexhopped.fq", "R2_indexhopped.fq")
+        #Format for pairs with unknown/low-quality indices: keys = ("index1", "index2"); values =  ("R1_lowqual_unknown.fq", "R2_lowqual_unknown.fq")
+
+    #Create another dictionary to keep count of occurrences of index pairs. Dictionary keys will be a tuple of the index sequences, and values will be the number of occurrences of the index pair.
+        #Before our main body of code, we can initialize the 24 dual-matched index pairs as keys in this dictionary with values set to 0. As we continue in the algorithm, we will add unmatched high-quality index pairs to this dictionary as they are encountered.
+
+#Main Body
+    #Start by opening our 4 original fastq files at once.
+    
+    #Iterate over all 4 fastq files 1 record at a time (4 lines).
+    
+    #Per record, take each record line per file and save as corresponding variable.
+    
+    #Take the read3 index sequence, and create its reverse compliment, updating the variable with this string.
+    
+    #Append the read1 and read4 header lines with the index1 and index2 (read 2 and read3 reverse compliment).
+
+    #Now that we have our record in the proper format, we can sort the reads.
+        #First check to see if indices are within known list. If not, sort reads to unknown/low quality fastq files and increment unknown/low quality counter
+        #Convert quality score lines of read1 and read4. Calculate average qs of entire read for both. If Average is below cutoff, also sort to unknown/low quality fastq files and increment unknown/low quality counter.
+        
+        #Elif:
+            #Check that indices match. If they don't, add read1 and read4 records with appended headers to index-hopped fastq file pair and incrememnt index-hopped counter.
+                #Check if this index pair already exists within the index pair freq dictionary. If it does, increment the corresponding value. Otherwise, add the pair and set its value to 1.
+
+        #Elif:
+            #This statement should encompass our high quality dual-matched index reads.
+            #Increment matched index counter and the corresponding value in the index pair freq dictionary.
+            #Add record to corresponding index in the first index pair-filename dictionary.
+
+#Outputs
+    #Print index pair-filename dictionary entries into corresponding files.
+    #Print counts.
+    #Close all files left open.
+###EOF###
+
+8) Wrote high-level functions
+###START OF HIGHLEVELFXNS.TXT###
+def reverse_compliment(seq: str) -> str:
+    '''Takes a nucleotide sequence and returns its reverse compliment. If sequence contains N, reverse comlimentary base will also be N.'''
+    return seq_rc
+Input: ATCGTAT
+Expected output: ATACGAT
+
+def print_outputs(dual_matched_count: int, index_hopped_count: int, low_qual_unknown_count: int, paired_index_dict: dict, outputfilename: str) -> str:
+    '''Takes counts of index pair types as well as the dictionary containing index pairs and filename conventions, then returns corresponding str to be written to file.'''
+    return fileoutput
+Input: above variables and dictionary
+Expected output: properly formatted tab-separated summary of results to be written to file
+
+def print_sorted_pairs(read1_header: str, read1_seq: str, read1_qscoreline: str, read1_filename: str, read4_header: str, read4_seq: str, read4_qscoreline: str, read4_filename: str) -> str:
+    '''Rewrites each line of read1 and read4 records to sorted fastq file pairs based on index.
+Input: above variables
+Expected output: string of lines formatted in the fastq file convention
+###EOF###
