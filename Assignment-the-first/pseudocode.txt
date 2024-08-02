@@ -1,17 +1,45 @@
-#shebang
+#Initialization
+    #Shebang
 
-#initialize bioinfo.py, argparse
+    #Import necessary modules
 
-#set up arparse to accept fw and rv biological read fastq files and then fw and rv index fastq files and then index map txt file
+    #Create a variable to hold count of number of pairs of properly matched indices, another to hold count of index-hopped pairs, and a third variable to hold count of pairs with low quality/unknown indices. All 3 of these variables will be initially set to 0.
 
-#Initialize and fill a dictionary with index sequences as keys and 2-character index as values
+    #Create a set to contain our 24 index sequences.
+        #To accomplish this, open the index file from Talapas and iterate over to add each index to set.
+    
+    #Create a dictionary to contain tuples of index pairs as keys and tuples of file names as values.
+        #Format for dual-matched pairs: keys = ("index1", "index2"); values =  ("R1_dualmatched_{index1}-{index2}.fq", "R2_dualmatched_{index1}-{index2}.fq")
+        #Format for index-hopped pairs: keys = ("index1", "index2"); values =  ("R1_indexhopped.fq", "R2_indexhopped.fq")
+        #Format for pairs with unknown/low-quality indices: keys = ("index1", "index2"); values =  ("R1_lowqual_unknown.fq", "R2_lowqual_unknown.fq")
 
-#Reading R1, R2, R3, and R4 files simultaneously. Select sequence score line of index. If index contains an N, throw the corresponding read in each file into the low quality/unknown fastq files, increment counter, and add r2 seq to r1 header and r3 seq to r4 header.
+    #Create another dictionary to keep count of occurrences of index pairs. Dictionary keys will be a tuple of the index sequences, and values will be the number of occurrences of the index pair.
+        #Before our main body of code, we can initialize the 24 dual-matched index pairs as keys in this dictionary with values set to 0. As we continue in the algorithm, we will add unmatched high-quality index pairs to this dictionary as they are encountered.
 
-#If index is not ambiguous, check for average quality score of entire index sequence. If average is <30, throw index and corresponing reads into low quality/unknown fastq files, increment counter, and add r2 seq to r1 header and r3 seq to r4 header.
+#Main Body
+    #Start by opening our 4 original fastq files at once.
+    
+    #Iterate over all 4 fastq files 1 record at a time (4 lines).
+    
+    #Per record, take each record line per file and save as corresponding variable.
+    
+    #Take the read3 index sequence, and create its reverse compliment, updating the variable with this string.
+    
+    #Append the read1 and read4 header lines with the index1 and index2 (read 2 and read3 reverse compliment).
 
-#Next, check to make sure indices match (read 3 should be the reverse complement of read 2). If the indices do not match, throw read into index-hopping fastq files, increment counter, and add r2 seq to r1 header and r3 seq to r4 header.
+    #Now that we have our record in the proper format, we can sort the reads.
+        #First check to see if indices are within known list. If not, sort reads to unknown/low quality fastq files and increment unknown/low quality counter
+        #Convert quality score lines of read1 and read4. Calculate average qs of entire read for both. If Average is below cutoff, also sort to unknown/low quality fastq files and increment unknown/low quality counter.
+        
+        #Elif:
+            #Check that indices match. If they don't, add read1 and read4 records with appended headers to index-hopped fastq file pair and incrememnt index-hopped counter.
+                #Check if this index pair already exists within the index pair freq dictionary. If it does, increment the corresponding value. Otherwise, add the pair and set its value to 1.
 
-#Now, we should have only our dual-matched reads and indices. So, iterate through the files, adding the index sequences to headers, and then adding the appended records to new fastq files based on barcode.
+        #Elif:
+            #This statement should encompass our high quality dual-matched index reads.
+            #Increment matched index counter and the corresponding value in the index pair freq dictionary.
+            #Add record to corresponding index in the first index pair-filename dictionary.
 
-#Print values storing counts of matched index reads, index-hopped reads, and unknown/low quality reads.
+#Outputs
+    #Print index pair-filename dictionary entries into corresponding files.
+    #Close all files left open.
