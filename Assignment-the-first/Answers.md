@@ -96,6 +96,7 @@ Expected output: properly formatted tab-separated summary of results to be writt
 
 def print_sorted_pairs(read1_header: str, read1_seq: str, read1_qscoreline: str, read1_filename: str, read4_header: str, read4_seq: str, read4_qscoreline: str, read4_filename: str) -> str:
     '''Rewrites each line of read1 and read4 records to sorted fastq file pairs based on index.
+    return fastq_str
 Input: above variables
 Expected output: string of lines formatted in the fastq file convention
 ```
