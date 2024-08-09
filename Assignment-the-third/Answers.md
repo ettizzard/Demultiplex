@@ -29,5 +29,6 @@
 
 Number of Index-Hopped Pairs: 330975  
 Percentage of Read Pairs Exhibiting Index-Hopping: 0.09%  
+  
 Number of Unknown or Low Quality Pairs: 136200158  
 Percentage of Reads Containing Unknown or Low Quality Indices: 37.50%
