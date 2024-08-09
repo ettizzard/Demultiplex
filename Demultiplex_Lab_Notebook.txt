@@ -1,0 +1,396 @@
+###Assignment the First###
+1) Entered interactive session for initial data exploration
+    
+    $ srun -A bgmp -p bgmp -c2 --pty bash
+
+    $ zcat /projects/bgmp/shared/2017_sequencing/1294_S1_L008_R1_001.fastq.gz | head -4
+        @K00337:83:HJKJNBBXX:8:1101:1265:1191 1:N:0:1
+        GNCTGGCATTCCCAGAGACATCAGTACCCAGTTGGTTCAGACAGTTCCTCTATTGGTTGACAAGGTCTTCATTTCTAGTGATATCAACACGGTGTCTACAA
+        +
+        A#A-<FJJJ<JJJJJJJJJJJJJJJJJFJJJJFFJJFJJJAJJJJ-AJJJJJJJFFJJJJJJFFA-7<AJJJFFAJJJJJF<F--JJJJJJF-A-F7JJJJ
+
+    $ zcat /projects/bgmp/shared/2017_sequencing/1294_S1_L008_R4_001.fastq.gz | head -4
+        @K00337:83:HJKJNBBXX:8:1101:1265:1191 4:N:0:1
+        NTTTTGATTTACCTTTCAGCCAATGAGAAGGCCGTTCATGCAGACTTTTTTAATGATTTTGAAGACCTTTTTGATGATGATGATGTCCAGTGAGGCCTCCC
+        +
+        #AAFAFJJ-----F---7-<FA-F<AFFA-JJJ77<FJFJFJJJJJJJJJJAFJFFAJJJJJJJJFJF7-AFFJJ7F7JFJJFJ7FFF--A<A7<-A-7--
+
+    $ zcat /projects/bgmp/shared/2017_sequencing/1294_S1_L008_R2_001.fastq.gz | head -4
+        @K00337:83:HJKJNBBXX:8:1101:1265:1191 2:N:0:1
+        NCTTCGAC
+        +
+        #AA<FJJJ
+
+    $ zcat /projects/bgmp/shared/2017_sequencing/1294_S1_L008_R3_001.fastq.gz | head -4
+        @K00337:83:HJKJNBBXX:8:1101:1265:1191 3:N:0:1
+        NTCGAAGA
+        +
+        #AAAAJJF
+    
+    From this, we know that biological sequence lines are of length 101 and index sequences are of length 8.
+
+2) Wrote script "perbaseseqsdistribution.py" to plot per-base distribution of quality scores
+###START OF SCRIPT###
+#!/usr/bin/env python
+
+import bioinfo
+import matplotlib.pyplot as plt
+import gzip
+import argparse
+
+def get_args():
+    parser = argparse.ArgumentParser(description="Setting up fastq and read length arguments")
+    parser.add_argument("-f", help="input fastq file", type=str)
+    parser.add_argument("-l", help="sequence length", type=int)
+    parser.add_argument("-r", help="read label", type=str)
+    return parser.parse_args()
+args = get_args()
+
+read = []
+
+for i in range(args.l):
+    read.append(0.0)
+
+with gzip.open(args.f, "rt") as fq:
+    for line_num, line in enumerate(fq):
+        line = line.strip()
+        if line_num % 4 == 3:
+            for base_pos, base in enumerate(line):
+                read[base_pos] += bioinfo.convert_phred(base)
+                
+#calculate and print mean value at each base position
+for index, value in enumerate(read):
+    read[index] = value / ((line_num + 1) / 4)
+    print(f"{index} {read[index]}")
+
+filename = args.f.split("/")[-1].split(".")[0]
+
+plt.title("Read"+args.r+" Per Base Average Quality Score Distribution")
+plt.scatter(range(args.l), read)
+plt.xlabel("Base Position")
+plt.ylabel("Quality Score")
+plt.savefig(filename+"_distributionplot.png")
+###EOF###
+
+3) Wrote 4 separate sbatch scripts so I could run them simultaneously. Each script is identical save for the corresponding read number and file name.
+###START OF SCRIPT###
+#!/bin/bash
+
+#SBATCH --partition=bgmp        ### Partition (like a queue in PBS)
+#SBATCH --job-name=r1plot     ### Job Name
+#SBATCH --output=r1plot.out        ### File in which to store job output
+#SBATCH --error=r1plot.err          ### File in which to store job error messages
+#SBATCH --time=0-08:00:00       ### Wall clock time limit in Days-HH:MM:SS
+#SBATCH --nodes=1               ### Number of nodes needed for the job
+#SBATCH --cpus-per-task=8
+#SBATCH --account=bgmp      ### Account used for job submission
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=tizzard@uoregon.edu
+ 
+set -e
+
+/usr/bin/time -v ./perbaseqsdistributions.py -f /projects/bgmp/shared/2017_sequencing/1294_S1_L008_R1_001.fastq.gz -l 101 -r 1
+###EOF###
+
+5) Determined how many indices have undetermined base calls.
+    $ zcat /projects/bgmp/shared/2017_sequencing/1294_S1_L008_R2_001.fastq.gz | awk 'NR % 4 == 2' | grep "N" | wc -l
+        3976613
+    
+    $ zcat /projects/bgmp/shared/2017_sequencing/1294_S1_L008_R3_001.fastq.gz | awk 'NR % 4 == 2' | grep "N" | wc -l
+        3328051
+    
+    $ zcat /projects/bgmp/shared/2017_sequencing/1294_S1_L008_R2_001.fastq.gz /projects/bgmp/shared/2017_sequencing/1294_S1_L008_R3_001.fastq.gz | awk 'NR % 4 == 2' | grep "N" | wc -l
+        7304664
+    
+
+
+6) Made unit tests:
+    #First 2 records are high quality dual matched with same index
+    #3rd record is high quality dual matched with different index
+    #4th record is low quality (contains N)
+    #5th record contains unknown index
+    #6th record exhibits index hopping (known indices, but not identical)
+
+7) Fixed up pseudocode:
+###START OF PSEUDOCODE###
+#Initialization
+    #Shebang
+
+    #Import necessary modules
+
+    #Create a variable to hold count of number of pairs of properly matched indices, another to hold count of index-hopped pairs, and a third variable to hold count of pairs with low quality/unknown indices. All 3 of these variables will be initially set to 0.
+
+    #Create a set to contain our 24 index sequences.
+        #To accomplish this, open the index file from Talapas and iterate over to add each index to set.
+    
+    #Create a dictionary to contain tuples of index pairs as keys and tuples of file names as values.
+        #Format for dual-matched pairs: keys = ("index1", "index2"); values =  ("R1_dualmatched_{index1}-{index2}.fq", "R2_dualmatched_{index1}-{index2}.fq")
+        #Format for index-hopped pairs: keys = ("index1", "index2"); values =  ("R1_indexhopped.fq", "R2_indexhopped.fq")
+        #Format for pairs with unknown/low-quality indices: keys = ("index1", "index2"); values =  ("R1_lowqual_unknown.fq", "R2_lowqual_unknown.fq")
+
+    #Create another dictionary to keep count of occurrences of index pairs. Dictionary keys will be a tuple of the index sequences, and values will be the number of occurrences of the index pair.
+        #Before our main body of code, we can initialize the 24 dual-matched index pairs as keys in this dictionary with values set to 0. As we continue in the algorithm, we will add unmatched high-quality index pairs to this dictionary as they are encountered.
+
+#Main Body
+    #Start by opening our 4 original fastq files at once.
+    
+    #Iterate over all 4 fastq files 1 record at a time (4 lines).
+    
+    #Per record, take each record line per file and save as corresponding variable.
+    
+    #Take the read3 index sequence, and create its reverse compliment, updating the variable with this string.
+    
+    #Append the read1 and read4 header lines with the index1 and index2 (read 2 and read3 reverse compliment).
+
+    #Now that we have our record in the proper format, we can sort the reads.
+        #First check to see if indices are within known list. If not, sort reads to unknown/low quality fastq files and increment unknown/low quality counter
+        #Convert quality score lines of read1 and read4. Calculate average qs of entire read for both. If Average is below cutoff, also sort to unknown/low quality fastq files and increment unknown/low quality counter.
+        
+        #Elif:
+            #Check that indices match. If they don't, add read1 and read4 records with appended headers to index-hopped fastq file pair and incrememnt index-hopped counter.
+                #Check if this index pair already exists within the index pair freq dictionary. If it does, increment the corresponding value. Otherwise, add the pair and set its value to 1.
+
+        #Elif:
+            #This statement should encompass our high quality dual-matched index reads.
+            #Increment matched index counter and the corresponding value in the index pair freq dictionary.
+            #Add record to corresponding index in the first index pair-filename dictionary.
+
+#Outputs
+    #Print index pair-filename dictionary entries into corresponding files.
+    #Print counts.
+    #Close all files left open.
+###EOF###
+
+8) Wrote high-level functions
+###START OF HIGHLEVELFXNS.TXT###
+def reverse_compliment(seq: str) -> str:
+    '''Takes a nucleotide sequence and returns its reverse compliment. If sequence contains N, reverse comlimentary base will also be N.'''
+    return seq_rc
+Input: ATCGTAT
+Expected output: ATACGAT
+
+def print_outputs(dual_matched_count: int, index_hopped_count: int, low_qual_unknown_count: int, paired_index_dict: dict, outputfilename: str) -> str:
+    '''Takes counts of index pair types as well as the dictionary containing index pairs and filename conventions, then returns corresponding str to be written to file.'''
+    return fileoutput
+Input: above variables and dictionary
+Expected output: properly formatted tab-separated summary of results to be written to file
+
+def print_sorted_pairs(read1_header: str, read1_seq: str, read1_qscoreline: str, read1_filename: str, read4_header: str, read4_seq: str, read4_qscoreline: str, read4_filename: str) -> str:
+    '''Rewrites each line of read1 and read4 records to sorted fastq file pairs based on index.
+    return fastq_str
+Input: above variables
+Expected output: string of lines formatted in the fastq file convention
+###EOF###
+
+##########Assignment the Third############
+
+9) Wrote Demultiplex script
+###START OF DEMULTIPLEX.PY###
+#!/usr/bin/env python
+
+#Importing necessary modules
+import bioinfo
+import matplotlib.pyplot as plt
+import gzip
+import argparse
+import itertools
+
+#Initializing argparse
+def get_args():
+    parser = argparse.ArgumentParser(description="Setting up fastq and read length arguments")
+    parser.add_argument("-r1", help="input r1 fastq file", type=str)
+    parser.add_argument("-r2", help="input r2 fastq file", type=str)
+    parser.add_argument("-r3", help="input r3 fastq file", type=str)
+    parser.add_argument("-r4", help="input r4 fastq file", type=str)
+    parser.add_argument("-i", help="known index file", type=str)
+    return parser.parse_args()
+args = get_args()
+
+#Starting counts for index pair types
+index_hopped_pairs_count = 0
+lowqual_unknown_pairs_count = 0
+
+#Creating and populating set to contain known index sequences
+indices = set()
+with open(args.i, "r") as index_textfile:
+    for line_num, line in enumerate(index_textfile):
+        line = line.strip()
+        line = line.split("\t")
+        if line_num > 0:
+            indices.add(line[4])
+
+
+#Initializing filename and pair count dictionaries for dual matched indices.
+dualmatched_filename_dict = {} # {keys: (index1, index2); values: ({index1}-{index2}_R1.fq, {index1}-{index2}_R2.fq)}
+dualmatched_pair_count = {} # {keys: (index1, index2); values: count of index pair occurences}
+
+
+#For loop iterating over list of indices (index1) to generate their reverse compliments, index2 in the case of dual-matching. Then populating dictionaries
+#to hold indices, filenames, and counts of index pair occurrences.
+for index1 in indices:
+    index2 = index1
+    dualmatched_filename_dict[(index1, index2)] = (open(str(index1)+"-"+str(index2)+"_R1.fq", "w"), open(str(index1)+"-"+str(index2)+"_R2.fq", "w"))
+    dualmatched_pair_count[(index1, index2)] = 0
+
+#Opening index hopped and unknown/lowquality read fq files for writing
+r1_index_hopped_fq = open("index_hopped_R1.fq", "w")
+r2_index_hopped_fq = open("index_hopped_R2.fq", "w")
+r1_unknown_lowqual_fq = open("unknown_lowqual_R1.fq", "w")
+r2_unknown_lowqual_fq = open("unknown_lowqual_R2.fq", "w")
+
+#Setting a record count for later stats
+total_record_count = 0
+
+#Now starting to iterate record by record in all 4 fastq files.
+with gzip.open(args.r1, "rt") as read1, gzip.open(args.r2, "rt") as read2, gzip.open(args.r3, "rt") as read3, gzip.open(args.r4, "rt") as read4:
+    while True:
+        #Iterating 4 lines at a time per iteration
+        r1_header = read1.readline().strip()
+        r1_sequence = read1.readline().strip()
+        r1_plus = read1.readline().strip()
+        r1_qscore = read1.readline().strip()
+
+        #Breaking loop when reaching EOF
+        if r1_header == "":
+            break
+        
+        total_record_count += 1
+        r2_header = read2.readline().strip()
+        r2_sequence = read2.readline().strip()
+        r2_plus = read2.readline().strip()
+        r2_qscore = read2.readline().strip()
+
+        r3_header = read3.readline().strip()
+        r3_sequence = read3.readline().strip()
+        #Creating the reverse compliment of R3 to verify it is the same as R2 for dual matching
+        r3_sequence_rc = bioinfo.reverse_compliment(r3_sequence)
+        r3_plus = read3.readline().strip()
+        r3_qscore = read3.readline().strip()
+
+        r4_header = read4.readline().strip()
+        r4_sequence = read4.readline().strip()
+        r4_plus = read4.readline().strip()
+        r4_qscore = read4.readline().strip()
+
+        #appending header lines with index sequences
+        indexed_r1_header = r1_header + " " + r2_sequence + "-" + r3_sequence_rc
+        indexed_r4_header = r4_header + " " + r2_sequence + "-" + r3_sequence_rc
+
+            
+        #Sorting known reads
+        if r2_sequence in indices and r3_sequence_rc in indices:
+            
+            #Sorting low-quality reads
+            both_index_qscores = r2_qscore + r3_qscore
+            read_written_flag = False
+            for base in both_index_qscores:
+                if bioinfo.convert_phred(base) < 32:
+                    r1_unknown_lowqual_fq.write(indexed_r1_header + "\n" + r1_sequence + "\n" + "+\n" + r1_qscore + "\n")
+                    r2_unknown_lowqual_fq.write(indexed_r4_header + "\n" + r4_sequence + "\n" + "+\n" + r4_qscore + "\n")
+                    lowqual_unknown_pairs_count += 1
+                    read_written_flag = True
+                    break
+            
+            if read_written_flag:
+                continue
+            
+            #Sorting dual matched reads
+            elif r2_sequence == r3_sequence_rc:
+                
+                #Setting file handles based on indices
+                r1_dualmatched_fq = dualmatched_filename_dict[(r2_sequence, r2_sequence)][0]
+                r2_dualmatched_fq = dualmatched_filename_dict[(r2_sequence, r2_sequence)][1]
+            
+                r1_dualmatched_fq.write(indexed_r1_header + "\n" + r1_sequence + "\n" + "+\n" + r1_qscore + "\n")
+                r2_dualmatched_fq.write(indexed_r4_header + "\n" + r4_sequence + "\n" + "+\n" + r4_qscore + "\n")
+                dualmatched_pair_count[(r2_sequence, r3_sequence_rc)] += 1
+                
+            
+            #Sorting index-hopped reads
+            elif r2_sequence != r3_sequence_rc:
+                r1_index_hopped_fq.write(indexed_r1_header + "\n" + r1_sequence + "\n" + "+\n" + r1_qscore + "\n")
+                r2_index_hopped_fq.write(indexed_r4_header + "\n" + r4_sequence + "\n" + "+\n" + r4_qscore + "\n")
+                index_hopped_pairs_count += 1
+            
+
+        #Sorting unknown reads
+        else:
+            r1_unknown_lowqual_fq.write(indexed_r1_header + "\n" + r1_sequence + "\n" + "+\n" + r1_qscore + "\n")
+            r2_unknown_lowqual_fq.write(indexed_r4_header + "\n" + r4_sequence + "\n" + "+\n" + r4_qscore + "\n")
+            lowqual_unknown_pairs_count += 1
+  
+
+#Output print statements
+for key in dualmatched_pair_count:
+    print(f"{key[0]}-{key[1]}\t{dualmatched_pair_count[key]}\t{dualmatched_pair_count[key]/total_record_count*100:.2f}%")
+
+print(f"Number of Index-Hopped Pairs: {index_hopped_pairs_count}\nPercentage of Read Pairs Exhibiting Index-Hopping: {index_hopped_pairs_count/total_record_count*100:.2f}%")
+print(f"Number of Unknown or Low Quality Pairs: {lowqual_unknown_pairs_count}\nPercentage of Reads Containing Unknown or Low Quality Indices: {lowqual_unknown_pairs_count/total_record_count*100:.2f}%")
+
+
+#Closing manually opened files
+for key in dualmatched_filename_dict:
+    dualmatched_filename_dict[key][0].close()
+    dualmatched_filename_dict[key][1].close()
+
+
+r1_index_hopped_fq.close()
+r2_index_hopped_fq.close()
+r1_unknown_lowqual_fq.close()
+r2_unknown_lowqual_fq.close()
+###EOF###
+
+10) Wrote an sbatch script run_demultiplex.sh to run demultiplex.py
+###START OF SBATCH SCRIPT###
+#!/bin/bash
+
+#SBATCH --account=bgmp   ### change this to your actual account for charging
+#SBATCH --partition=bgmp     ### queue to submit to
+#SBATCH --job-name=demultiplex    ### job name
+#SBATCH --output=demultiplex.out   ### file in which to store job stdout
+#SBATCH --error=demultiplex.err    ### file in which to store job stderr
+#SBATCH --time=1-0                ### wall-clock time limit, in minutes
+#SBATCH --nodes=1               ### number of nodes to use
+#SBATCH --cpus-per-task=1       ### number of cores for each task
+
+./demultiplex.py -i /projects/bgmp/shared/2017_sequencing/indexes.txt \
+    -r1 /projects/bgmp/shared/2017_sequencing/1294_S1_L008_R1_001.fastq.gz \
+    -r2 /projects/bgmp/shared/2017_sequencing/1294_S1_L008_R2_001.fastq.gz \
+    -r3 /projects/bgmp/shared/2017_sequencing/1294_S1_L008_R3_001.fastq.gz \
+    -r4 /projects/bgmp/shared/2017_sequencing/1294_S1_L008_R4_001.fastq.gz
+###EOF###
+
+11) Ran sbatch script
+$ sbatch run_demultiplex.sh
+
+12) Contents of demultiplex.out:
+CGATCGAT-CGATCGAT	4237854	1.17%
+GTAGCGTA-GTAGCGTA	5774439	1.59%
+TCGAGAGT-TCGAGAGT	7448072	2.05%
+GATCAAGG-GATCAAGG	4628196	1.27%
+GCTACTCT-GCTACTCT	4301318	1.18%
+GATCTTGC-GATCTTGC	2636332	0.73%
+AACAGCGA-AACAGCGA	6368144	1.75%
+ATCGTGGT-ATCGTGGT	4730009	1.30%
+TGTTCCGT-TGTTCCGT	11450554	3.15%
+ATCATGCG-ATCATGCG	6927867	1.91%
+CTAGCTCA-CTAGCTCA	13034311	3.59%
+CTCTGGAT-CTCTGGAT	24515042	6.75%
+GTCCTAAG-GTCCTAAG	6200133	1.71%
+TCTTCGAC-TCTTCGAC	30089661	8.28%
+TACCGGAT-TACCGGAT	49686878	13.68%
+AGGATAGC-AGGATAGC	5861709	1.61%
+CGGTAATC-CGGTAATC	2393021	0.66%
+TAGCCATG-TAGCCATG	7148153	1.97%
+TCGACAAG-TCGACAAG	2644260	0.73%
+TATGGCAC-TATGGCAC	7651472	2.11%
+ACGATCAG-ACGATCAG	5933528	1.63%
+AGAGTCCA-AGAGTCCA	7602663	2.09%
+TCGGATTC-TCGGATTC	2874320	0.79%
+CACTTCAC-CACTTCAC	2577666	0.71%
+Number of Index-Hopped Pairs: 330975
+Percentage of Read Pairs Exhibiting Index-Hopping: 0.09%
+Number of Unknown or Low Quality Pairs: 136200158
+Percentage of Reads Containing Unknown or Low Quality Indices: 37.50%
+
+13) Added and formatted output to Answers.md
