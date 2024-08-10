@@ -96,7 +96,7 @@ with gzip.open(args.r1, "rt") as read1, gzip.open(args.r2, "rt") as read2, gzip.
             both_index_qscores = r2_qscore + r3_qscore
             read_written_flag = False
             for base in both_index_qscores:
-                if bioinfo.convert_phred(base) < 32:
+                if bioinfo.convert_phred(base) < 27:
                     r1_unknown_lowqual_fq.write(indexed_r1_header + "\n" + r1_sequence + "\n" + "+\n" + r1_qscore + "\n")
                     r2_unknown_lowqual_fq.write(indexed_r4_header + "\n" + r4_sequence + "\n" + "+\n" + r4_qscore + "\n")
                     lowqual_unknown_pairs_count += 1
